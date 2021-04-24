@@ -1,2 +1,2 @@
 # masterThesis
-The following code was written in a masterthesis @ TU-Berli/April 2021
+The following code was written in a masterthesis @ TU-Berlin/April 2021

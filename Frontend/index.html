@@ -1,0 +1,189 @@
+<head>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=no" />
+    <meta charset="utf-8">
+
+    <!-- The Viewer CSS -->
+
+    <!-- Developer CSS -->
+
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
+    <script src="snappingTest.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .buttonIcon {
+            background-image: url("https://res.cloudinary.com/masterthesis/image/upload/v1617469493/1_djke0k.png");
+            background-size: 24px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+
+        #myViewerDiv {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+
+        }
+
+        #side {
+            margin-top: 3rem;
+            position: absolute;
+            flex-wrap: wrap;
+            z-index: 2;
+            padding-left: 1rem;
+            display: none;
+
+        }
+
+        #firstPointInfo {
+            border: 2px solid #ccc;
+            background-color: #ffffff;
+            border-radius: 5px;
+            width: 150px;
+            color: black;
+            padding: 0.5rem;
+
+        }
+
+        #secondPointInfo {
+
+            border: 2px solid #ccc;
+            background-color: #ffffff;
+            border-radius: 5px;
+            width: 150px;
+            color: black;
+            padding: 0.5rem;
+
+
+        }
+
+        #dist {
+            border: 2px solid #ccc;
+            background-color: #ffffff;
+            border-radius: 5px;
+            color: black;
+            width: 150px;
+            padding: 0.5rem;
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <body>
+       
+        <form id="form">
+            <b> Select your case </b>
+            <select id="myList" onchange="chooseCase()">
+                <option> ---Choose case--- </option>
+                <option>Dimensions in the floor plan</option>
+                <option>Dimensions in the elevation plan</option>
+                <option>Internal dimension in the floor plan</option>
+                <option>Internal dimension in the elevation plan</option>
+                <option>Opening dimension</option>
+            </select>
+
+        </form>
+
+
+        <div id="MyViewerDiv">
+
+
+           
+
+            <div id="side">
+                <div id="firstPointInfo">
+                    <h3>firstPoint</h3>
+                    <p>xPosition: <span id="infoX1"></span></p>
+                    <p>yPosition: <span id="infoY1"></span></p>
+                    <p>zPosition: <span id="infoZ1"></span></p>
+                </div>
+                <div id="secondPointInfo">
+
+                    <h3>secondPoint</h3>
+                    <p>xPosition: <span id="infoX2"></span></p>
+                    <p>yPosition: <span id="infoY2"></span></p>
+                    <p>zPosition: <span id="infoZ2"></span></p>
+
+                </div>
+                <div id="dist">
+                    <h3>Distance</h3>
+                    <p>Distance in model: <b><span id="bim"></span></p></b>
+                    <p>Distance at the construction site : <b><span id="laser"></span></p></b>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- The Viewer JS -->
+
+        <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css"
+            type="text/css">
+
+
+        <!-- Developer JS -->
+        <script>
+           
+            async function  getToken(){
+            token=  await axios.get('http://localhost:3000/token');
+         //   console.log(typeof token.data) ;
+            return token.data;
+
+}
+
+            var viewer;
+            var options = {
+                env: 'AutodeskProduction',
+                getAccessToken:  async onGetAccessToken => {
+
+                    var accessToken = await getToken();
+                    var expireTimeSeconds = 60 * 30;
+                    onGetAccessToken(accessToken, expireTimeSeconds);
+                }
+
+            };
+
+
+
+            var documentId = 'urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6cHA0bXF2YzZxend5c2diY2d1MHZ5ZWV6YmhleXUwZW8vdGVzdDEuaWZj';
+            Autodesk.Viewing.Initializer(options, () => {
+                const config = {
+                    extensions: ['MeasureDistance'] //
+                };
+                var htmlDiv = document.getElementById('MyViewerDiv');
+                viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv, config);
+                var startedCode = viewer.start();
+                if (startedCode != 0) {
+                    console.error('Failed to create a Viewer: WebGL not supported.');
+                    return;
+                }
+
+                console.log('Initialization complete');
+
+            });
+            Autodesk.Viewing.Document.load(documentId, onDocumentLoadSuccess, onDocumentLoadFailure);
+
+            function onDocumentLoadSuccess(viewerDocument) {
+                var defaultModel = viewerDocument.getRoot().getDefaultGeometry();
+                viewer.loadDocumentNode(viewerDocument, defaultModel);
+            }
+
+
+            function onDocumentLoadFailure() {
+                console.error('Failed fetching Forge manifest');
+            }
+
+
+            this.tool = new DrawBoundsTool(viewer);
+            console.log(this.tool);
+
+
+        </script>
+    </body>
